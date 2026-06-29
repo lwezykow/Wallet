@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using Wallet.External.Nbp.Config;
+using Wallet.External.Nbp.Configuration;
 using Wallet.External.Nbp.Dto;
 
 namespace Wallet.External.Nbp;

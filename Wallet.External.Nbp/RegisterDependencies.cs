@@ -1,4 +1,4 @@
-using Wallet.External.Nbp.Config;
+using Wallet.External.Nbp.Configuration;
 
 namespace Wallet.External.Nbp;
 

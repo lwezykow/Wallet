@@ -1,14 +1,17 @@
 using System.Diagnostics;
+using Microsoft.Extensions.Options;
 using Wallet.Domain.Entities;
 using Wallet.Domain.Services;
 using Wallet.External.Nbp;
+using Wallet.External.Nbp.Configuration;
 
 namespace Wallet.Infrastructure;
 
 public class CurrencyRatePoolerService(
     ILogger<CurrencyRatePoolerService> logger,
     ICurrencyRateService currencyRateService,
-    IServiceProvider serviceProvider)
+    IServiceProvider serviceProvider,
+    IOptions<NbpCurrencyRatesSettings> settings)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -17,8 +20,7 @@ public class CurrencyRatePoolerService(
         
         await UpdateCurrencyRates();
 
-        //TODO: Load from configuration
-        using PeriodicTimer timer = new(TimeSpan.FromSeconds(30));
+        using PeriodicTimer timer = new(TimeSpan.FromSeconds(settings.Value.PoolingInterval));
 
         try
         {
@@ -48,9 +50,7 @@ public class CurrencyRatePoolerService(
             logger.LogInformation("Query returned {count} items", currencies.Length);
             logger.LogInformation("Saving items to database");
 
-            int affectedRows = await dataManger.RefreshCurrencyRatesAsync(
-                // TODO: Move to a function
-                currencies.Select(i => new CurrencyRate { Symbol = i.code, Name = i.currency, Rate = i.mid }));
+            int affectedRows = await dataManger.RefreshCurrencyRatesAsync(currencies.ToEntity());
             var delta = Stopwatch.GetElapsedTime(start);
 
             logger.LogInformation("{affectedRows} currencies loaded in {delta:T} ms", affectedRows, delta);
