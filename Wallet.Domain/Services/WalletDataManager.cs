@@ -98,6 +98,11 @@ public class WalletDataManager(
         return wallet;
     }
 
+    public async Task<IEnumerable<Entities.Wallet>> GetWallets()
+    {
+        return await walletRepository.GetAllAsync();
+    }
+
     private Fund ExchangeFunds(Fund sourceFund, ExchangeCurrencyRequest request)
     {
         sourceFund.Money -= request.Money;

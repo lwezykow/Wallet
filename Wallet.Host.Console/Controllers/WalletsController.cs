@@ -8,25 +8,32 @@ namespace Wallet.Host.Console.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WalletsController
+public class WalletsController(IWalletDataManager walletService, ILogger<RatesController> logger)
     : ControllerBase
 {
-    private readonly IWalletDataManager _walletService;
-    private readonly ILogger<RatesController> _logger;
-
-    public WalletsController(IWalletDataManager walletService, ILogger<RatesController> logger)
+    [HttpGet]
+    public async Task<ActionResult> Get()
     {
-        _walletService = walletService;
-        _logger = logger;
+        try
+        {
+            logger.LogInformation("Getting all wallets");
+            var wallet = await walletService.GetWallets();
+            
+            return Ok(wallet.ToModel());
+        }
+        catch (EntityNotFoundException)
+        {
+            return  NotFound();
+        }
     }
-
+    
     [HttpGet("{id}")]
     public async Task<ActionResult> Get(uint id)
     {
         try
         {
-            _logger.LogInformation($"Getting wallet {id}");
-            var wallet = await _walletService.GetWallet(id);
+            logger.LogInformation("Getting wallet {id}", id);
+            var wallet = await walletService.GetWallet(id);
             
             return Ok(wallet.ToModel());
         }
@@ -41,9 +48,9 @@ public class WalletsController
     {
         try
         {
-            _logger.LogInformation($"Creating wallet [{model}]");
-            var wallet = (await _walletService.AddWallet(model.ToEntity())).ToModel();
-            _logger.LogInformation($"Wallet [{wallet}] has been created]");
+            logger.LogInformation("Creating wallet [{createWalletModel}]", model);
+            var wallet = (await walletService.AddWallet(model.ToEntity())).ToModel();
+            logger.LogInformation("Wallet [{walletModel}] has been created]", wallet);
             
             return CreatedAtAction(nameof(Get), new { id = wallet.Id }, wallet);
         }
@@ -58,9 +65,9 @@ public class WalletsController
     {
         try
         {
-            _logger.LogInformation($"Removing wallet [{id}]");
-            await _walletService.RemoveWalletAsync(id);
-            _logger.LogInformation($"Wallet [{id}] was removed");
+            logger.LogInformation("Removing wallet [{id}]", id);
+            await walletService.RemoveWalletAsync(id);
+            logger.LogInformation("Wallet [{id}] was removed", id);
             
             return Ok();
         }

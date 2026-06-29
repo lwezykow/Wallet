@@ -40,6 +40,35 @@ public class WalletTests
         response = await client.GetAsync("api/Wallets/1");
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
+
+    [Test] public async Task Should_be_able_to_list_all_wallets()
+    {
+        string[] walletNames = ["wallet1", "wallet2", "wallet3"];
+        
+        var client = _factory.CreateClient();
+
+        HttpResponseMessage response;
+        
+        foreach (var name in walletNames)
+        {
+            response = await client.PostAsJsonAsync("api/Wallets",  new { Name = name });
+            Assert.That(response.IsSuccessStatusCode);
+        }
+        
+        response = await client.GetAsync("api/Wallets");
+        Assert.That(response.IsSuccessStatusCode);
+        Assert.That(response, Is.Not.Null);
+        
+        var actual = await JsonSerializer.DeserializeAsync<WalletModel[]>(
+            await response.Content.ReadAsStreamAsync(), JsonOptions);
+        Assert.That(actual,  Is.Not.Null);
+        Assert.That(actual, Has.Length.EqualTo(walletNames.Length));
+        
+        foreach (var wallet in walletNames)
+        {
+            Assert.That(actual.Any(w => w.Name == wallet));
+        }
+    }
     
     [Test]
     [TestCase("")]

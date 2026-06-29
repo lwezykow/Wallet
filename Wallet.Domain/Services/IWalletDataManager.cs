@@ -17,4 +17,6 @@ public interface IWalletDataManager
     Task<Entities.Wallet> SellCurrencyAsync(uint walletId, ExchangeCurrencyRequest request);
     
     Task<Entities.Wallet> BuyCurrencyAsync(uint walletId, ExchangeCurrencyRequest request);
+    
+    Task<IEnumerable<Entities.Wallet>> GetWallets();
 }
